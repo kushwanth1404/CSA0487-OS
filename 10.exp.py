@@ -1,37 +1,43 @@
-import numpy as np
-from scipy.stats import norm
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <string.h>
+#define MESSAGE_SIZE 128
+struct Message {
+    long mtype; 
+	char mtext[MESSAGE_SIZE];
+};
 
-# Define the data
-data = np.array([1.2, 2.3, 0.7, 1.6, 1.1, 1.8, 0.9, 2.2])
-
-# Initialize the parameters
-mu1 = 0
-mu2 = 1
-sigma1 = 1
-sigma2 = 1
-p1 = 0.5
-p2 = 0.5
-
-# Run the EM algorithm
-for i in range(10):
-    # E-step
-    likelihood1 = norm.pdf(data, mu1, sigma1)
-    likelihood2 = norm.pdf(data, mu2, sigma2)
-    weight1 = p1 * likelihood1 / (p1 * likelihood1 + p2 * likelihood2)
-    weight2 = p2 * likelihood2 / (p1 * likelihood1 + p2 * likelihood2)
-    
-    # M-step
-    mu1 = np.sum(weight1 * data) / np.sum(weight1)
-    mu2 = np.sum(weight2 * data) / np.sum(weight2)
-    sigma1 = np.sqrt(np.sum(weight1 * (data - mu1)**2) / np.sum(weight1))
-    sigma2 = np.sqrt(np.sum(weight2 * (data - mu2)**2) / np.sum(weight2))
-    p1 = np.mean(weight1)
-    p2 = np.mean(weight2)
-
-# Print the final estimates of the parameters
-print("mu1:", mu1)
-print("mu2:", mu2)
-print("sigma1:", sigma1)
-print("sigma2:", sigma2)
-print("p1:", p1)
-print("p2:", p2)
+int main() {
+    key_t key = 5678; 
+    int msgid = msgget(key, IPC_CREAT | 0666);
+    if (msgid == -1) {
+        perror("msgget");
+        exit(1);
+    }
+     pid_t pid = fork();
+    if (pid < 0) {
+        perror("fork");
+        exit(1);
+    }
+    if (pid == 0) {
+        struct Message message;
+        message.mtype = 1; 
+        printf("Child process sending message to the queue: Hello from the child!\n");
+        strncpy(message.mtext, "Hello from the child!", MESSAGE_SIZE);
+      if (msgsnd(msgid, &message, sizeof(message.mtext), 0) == -1) {
+            perror("msgsnd");
+            exit(1);
+        }
+    } else {
+        sleep(2);
+        struct Message receivedMessage;
+        if (msgrcv(msgid, &receivedMessage, sizeof(receivedMessage.mtext), 1, 0) == -1) {
+            perror("msgrcv");
+            exit(1);
+        }
+        printf("Parent process received message from the queue: %s\n", receivedMessage.mtext)
+       return 0;
