@@ -3,21 +3,19 @@
 int main()
 {
 	FILE *fptr1, *fptr2;
-	char filename[100], c;
-	printf("Enter the filename to open for reading \n");
-	scanf("%s", filename);
-	fptr1 = fopen(filename, "r");
+	char sourceName[]="prg02.c";
+	char destName[]="new_prg02.c";
+	char c;
+	fptr1 = fopen(sourceName, "r");
 	if (fptr1 == NULL)
 	{
-		printf("Cannot open file %s \n", filename);
+		printf("Cannot open file %s \n", sourceName);
 		exit(0);
 	}
-	printf("Enter the filename to open for writing \n");
-	scanf("%s", filename);
-	fptr2 = fopen(filename, "w");
+	fptr2 = fopen(destName, "w");
 	if (fptr2 == NULL)
 	{
-		printf("Cannot open file %s \n", filename);
+		printf("Cannot open file %s \n", destName);
 		exit(0);
 	}
 	c = fgetc(fptr1);
@@ -26,7 +24,7 @@ int main()
 		fputc(c, fptr2);
 		c = fgetc(fptr1);
 	}
-	printf("\nContents copied to %s", filename);
+	printf("\nContents copied to %s", destName);
 	fclose(fptr1);
 	fclose(fptr2);
 	return 0;
