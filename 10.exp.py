@@ -41,3 +41,4 @@ int main() {
         }
         printf("Parent process received message from the queue: %s\n", receivedMessage.mtext)
        return 0;
+}
